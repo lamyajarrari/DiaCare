@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { api } from "@/lib/api"
+import Image from "next/image" // Correction de l'import
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -24,7 +25,6 @@ export default function LoginPage() {
     try {
       const result = await api.login(email, password)
       if (result.success && result.user) {
-        // Store user data in localStorage for demo purposes
         localStorage.setItem("user", JSON.stringify(result.user))
         router.push(`/dashboard/${result.user.role}`)
       } else {
@@ -40,13 +40,22 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-16 h-16 bg-teal-500 rounded-lg flex items-center justify-center mb-4">
-            <span className="text-white font-bold text-2xl">D+</span>
+        <CardHeader className="text-center space-y-4">
+          {/* Conteneur du logo - taille très grande */}
+          <div className="mx-auto w-48 h-48 flex items-center justify-center"> {/* 192px × 192px */}
+            <Image 
+              src="/logo.png"
+              alt="DiaCare Logo"
+              width={192}  // Taille augmentée
+              height={192}
+              quality={100}
+              priority
+              className="object-contain"
+            />
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-800">DiaCare</CardTitle>
-          <CardDescription>Smart monitoring for effective dialysis management</CardDescription>
+          
         </CardHeader>
+        
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -60,6 +69,7 @@ export default function LoginPage() {
                 placeholder="Enter your email"
               />
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input
@@ -83,20 +93,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm font-medium text-gray-700 mb-2">Demo Accounts:</p>
-            <div className="space-y-1 text-xs text-gray-600">
-              <p>
-                <strong>Patient:</strong> patient@diacare.com / password123
-              </p>
-              <p>
-                <strong>Technician:</strong> tech@diacare.com / password123
-              </p>
-              <p>
-                <strong>Admin:</strong> admin@diacare.com / password123
-              </p>
-            </div>
-          </div>
+          
         </CardContent>
       </Card>
     </div>

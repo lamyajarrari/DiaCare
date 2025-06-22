@@ -5,7 +5,7 @@
       "email": "patient@diacare.com",
       "password": "password123",
       "role": "patient",
-      "name": "John Smith",
+      "name": "douha",
       "patientId": "P001"
     },
     {
@@ -13,7 +13,7 @@
       "email": "tech@diacare.com",
       "password": "password123",
       "role": "technician",
-      "name": "Sarah Johnson",
+      "name": "mehdi",
       "technicianId": "T001"
     },
     {
@@ -21,7 +21,7 @@
       "email": "admin@diacare.com",
       "password": "password123",
       "role": "admin",
-      "name": "Michael Brown",
+      "name": "lamya",
       "adminId": "A001"
     }
   ],
