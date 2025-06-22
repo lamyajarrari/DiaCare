@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Bell, LogOut, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -12,7 +13,6 @@ export function Navbar({ userRole, userName }) {
   const router = useRouter()
 
   const handleLogout = () => {
-    // In a real app, this would clear the session
     router.push("/login")
   }
 
@@ -47,15 +47,24 @@ export function Navbar({ userRole, userName }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Link href={`/dashboard/${userRole}`} className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">D+</span>
+            <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center">
+              <Image
+                src="/logo.png"       // Assure-toi que ce fichier existe dans /public
+                alt="DiaCare Logo"
+                width={64}
+                height={64}
+                className="object-contain"
+              />
             </div>
-            <span className="text-xl font-bold text-gray-800">DiaCare</span>
           </Link>
 
           <div className="hidden md:flex space-x-6">
             {getNavLinks().map((link) => (
-              <Link key={link.href} href={link.href} className="text-gray-600 hover:text-gray-900 font-medium">
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-gray-600 hover:text-gray-900 font-medium"
+              >
                 {link.label}
               </Link>
             ))}
@@ -77,7 +86,12 @@ export function Navbar({ userRole, userName }) {
             </Button>
           </div>
 
-          <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="md:hidden"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          >
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
