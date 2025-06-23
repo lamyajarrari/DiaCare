@@ -1,3 +1,4 @@
+// Votre_Chemin/components/Navbar.jsx (ou .tsx)
 "use client"
 
 import { useState } from "react"
@@ -36,6 +37,7 @@ export function Navbar({ userRole, userName }) {
           { href: "/dashboard/admin/users", label: "Users" },
           { href: "/dashboard/admin/machines", label: "Machines" },
           { href: "/dashboard/admin/reports", label: "Reports" },
+          { href: "/dashboard/admin/taxe", label: "Taxe" }, // <-- AJOUTEZ CETTE LIGNE
         ]
       default:
         return []
@@ -49,7 +51,7 @@ export function Navbar({ userRole, userName }) {
           <Link href={`/dashboard/${userRole}`} className="flex items-center space-x-2">
             <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center">
               <Image
-                src="/logo.png"       // Assure-toi que ce fichier existe dans /public
+                src="/logo.png"      // Assure-toi que ce fichier existe dans /public
                 alt="DiaCare Logo"
                 width={64}
                 height={64}
