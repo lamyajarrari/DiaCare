@@ -7,31 +7,28 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { api } from "@/lib/api"
-import Image from "next/image" // Correction de l'import
+import { useAuth } from "@/hooks/useAuth"
+import Image from "next/image"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { login, error } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
-    setError("")
 
     try {
-      const result = await api.login(email, password)
-      if (result.success && result.user) {
-        localStorage.setItem("user", JSON.stringify(result.user))
+      const result = await login(email, password)
+      if (result.user) {
         router.push(`/dashboard/${result.user.role}`)
-      } else {
-        setError(result.error || "Login failed")
       }
     } catch (err) {
-      setError("An error occurred during login")
+      // Error is handled by the useAuth hook
+      console.error('Login error:', err)
     } finally {
       setIsLoading(false)
     }
@@ -92,6 +89,15 @@ export default function LoginPage() {
             </Button>
           </form>
 
+          {/* Test credentials */}
+          <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+            <p className="text-sm text-gray-600 mb-2">Test credentials:</p>
+            <div className="text-xs text-gray-500 space-y-1">
+              <p><strong>Patient:</strong> patient@diacare.com / password123</p>
+              <p><strong>Technician:</strong> tech@diacare.com / password123</p>
+              <p><strong>Admin:</strong> admin@diacare.com / password123</p>
+            </div>
+          </div>
           
         </CardContent>
       </Card>

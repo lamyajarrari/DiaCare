@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Save, ArrowLeft } from "lucide-react"
 import { Navbar } from "@/components/layout/navbar"
-import { api } from "@/lib/api"
+import apiClient from "@/lib/api-client"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function NewInterventionPage() {
   const [user, setUser] = useState(null)
@@ -67,7 +68,7 @@ export default function NewInterventionPage() {
         status: "Completed",
       }
 
-      await api.createIntervention(interventionData)
+      await apiClient.createIntervention(interventionData)
       router.push("/dashboard/technician/interventions")
     } catch (error) {
       console.error("Error creating intervention:", error)

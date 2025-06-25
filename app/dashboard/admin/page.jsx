@@ -6,10 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Users, Settings, BarChart3, AlertTriangle, Wrench, Calendar } from "lucide-react"
 import { Navbar } from "@/components/layout/navbar"
-import { api } from "@/lib/api"
+import apiClient from "@/lib/api-client"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function AdminDashboard() {
-  const [user, setUser] = useState(null)
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalMachines: 0,
@@ -20,33 +20,31 @@ export default function AdminDashboard() {
   })
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const { user, isAuthenticated, hasRole } = useAuth()
 
   useEffect(() => {
-    const userData = localStorage.getItem("user")
-    if (!userData) {
+    if (!isAuthenticated()) {
       router.push("/login")
       return
     }
 
-    const parsedUser = JSON.parse(userData)
-    if (parsedUser.role !== "admin") {
+    if (!hasRole("admin")) {
       router.push("/login")
       return
     }
 
-    setUser(parsedUser)
     loadDashboardStats()
-  }, [router])
+  }, [router, isAuthenticated, hasRole])
 
   const loadDashboardStats = async () => {
     try {
       const [users, machines, alerts, maintenance, interventions, faults] = await Promise.all([
-        api.getUsers(),
-        api.getMachines(),
-        api.getAlerts(),
-        api.getMaintenanceSchedule(),
-        api.getInterventions(),
-        api.getFaults(),
+        apiClient.getUsers(),
+        apiClient.getMachines(),
+        apiClient.getAlerts(),
+        apiClient.getMaintenanceSchedules(),
+        apiClient.getInterventions(),
+        apiClient.getFaults(),
       ])
 
       setStats({
@@ -198,12 +196,12 @@ export default function AdminDashboard() {
                   <span className="text-sm text-green-600 font-medium">Connected</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Last Backup:</span>
-                  <span className="text-sm text-gray-600">June 21, 2025</span>
+                  <span className="text-sm font-medium">API Status:</span>
+                  <span className="text-sm text-green-600 font-medium">Online</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Active Sessions:</span>
-                  <span className="text-sm text-gray-600">12</span>
+                  <span className="text-sm font-medium">Last Backup:</span>
+                  <span className="text-sm text-gray-600">2 hours ago</span>
                 </div>
               </div>
             </CardContent>

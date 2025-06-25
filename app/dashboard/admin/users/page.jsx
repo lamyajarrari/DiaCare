@@ -11,10 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Plus, Search, Edit, Trash2 } from "lucide-react"
 import { Navbar } from "@/components/layout/navbar"
-import { api } from "@/lib/api"
+import apiClient from "@/lib/api-client"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function UsersPage() {
-  const [user, setUser] = useState(null)
   const [users, setUsers] = useState([])
   const [filteredUsers, setFilteredUsers] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -28,23 +28,21 @@ export default function UsersPage() {
     password: "",
   })
   const router = useRouter()
+  const { user, isAuthenticated, hasRole } = useAuth()
 
   useEffect(() => {
-    const userData = localStorage.getItem("user")
-    if (!userData) {
+    if (!isAuthenticated()) {
       router.push("/login")
       return
     }
 
-    const parsedUser = JSON.parse(userData)
-    if (parsedUser.role !== "admin") {
+    if (!hasRole("admin")) {
       router.push("/login")
       return
     }
 
-    setUser(parsedUser)
     loadUsers()
-  }, [router])
+  }, [router, isAuthenticated, hasRole])
 
   useEffect(() => {
     let filtered = users
@@ -53,7 +51,7 @@ export default function UsersPage() {
       filtered = filtered.filter(
         (user) =>
           user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase()),
+          user.email.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -66,7 +64,7 @@ export default function UsersPage() {
 
   const loadUsers = async () => {
     try {
-      const usersData = await api.getUsers()
+      const usersData = await apiClient.getUsers()
       setUsers(usersData)
       setFilteredUsers(usersData)
     } catch (error) {
@@ -79,7 +77,7 @@ export default function UsersPage() {
   const handleCreateUser = async (e) => {
     e.preventDefault()
     try {
-      await api.createUser(newUser)
+      await apiClient.createUser(newUser)
       setIsDialogOpen(false)
       setNewUser({ name: "", email: "", role: "", password: "" })
       loadUsers()
@@ -127,7 +125,7 @@ export default function UsersPage() {
                 <DialogTitle>Create New User</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleCreateUser} className="space-y-4">
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
@@ -136,7 +134,7 @@ export default function UsersPage() {
                     required
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
@@ -146,9 +144,9 @@ export default function UsersPage() {
                     required
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="role">Role</Label>
-                  <Select onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
+                  <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
@@ -159,7 +157,7 @@ export default function UsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <Input
                     id="password"
@@ -193,61 +191,49 @@ export default function UsersPage() {
                     placeholder="Search users..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-full sm:w-64"
+                    className="pl-10"
                   />
                 </div>
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-full sm:w-32">
-                    <SelectValue placeholder="Role" />
+                  <SelectTrigger className="w-full sm:w-40">
+                    <SelectValue placeholder="Filter by role" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Roles</SelectItem>
-                    <SelectItem value="patient">Patient</SelectItem>
-                    <SelectItem value="technician">Technician</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="technician">Technician</SelectItem>
+                    <SelectItem value="patient">Patient</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-medium">Name</th>
-                    <th className="text-left p-3 font-medium">Email</th>
-                    <th className="text-left p-3 font-medium">Role</th>
-                    <th className="text-left p-3 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((userData) => (
-                    <tr key={userData.id} className="border-b hover:bg-gray-50">
-                      <td className="p-3 font-medium">{userData.name}</td>
-                      <td className="p-3">{userData.email}</td>
-                      <td className="p-3">
-                        <Badge variant={getRoleBadgeVariant(userData.role)}>{userData.role}</Badge>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredUsers.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  {searchTerm || roleFilter !== "all" ? "No users match your filters" : "No users found"}
+            <div className="space-y-4">
+              {filteredUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div>
+                      <h3 className="font-medium">{user.name}</h3>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                    </div>
+                    <Badge variant={getRoleBadgeVariant(user.role)}>
+                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button size="sm" variant="outline">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           </CardContent>
         </Card>

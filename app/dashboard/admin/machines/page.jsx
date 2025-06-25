@@ -9,12 +9,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Plus, Search, Settings, Trash2 } from "lucide-react"
+import { Plus, Search, Edit, Trash2 } from "lucide-react"
 import { Navbar } from "@/components/layout/navbar"
-import { api } from "@/lib/api"
+import apiClient from "@/lib/api-client"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function MachinesPage() {
-  const [user, setUser] = useState(null)
   const [machines, setMachines] = useState([])
   const [filteredMachines, setFilteredMachines] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
@@ -22,29 +22,28 @@ export default function MachinesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [newMachine, setNewMachine] = useState({
+    id: "",
     name: "",
     inventoryNumber: "",
     department: "",
     status: "Active",
   })
   const router = useRouter()
+  const { user, isAuthenticated, hasRole } = useAuth()
 
   useEffect(() => {
-    const userData = localStorage.getItem("user")
-    if (!userData) {
+    if (!isAuthenticated()) {
       router.push("/login")
       return
     }
 
-    const parsedUser = JSON.parse(userData)
-    if (parsedUser.role !== "admin") {
+    if (!hasRole("admin")) {
       router.push("/login")
       return
     }
 
-    setUser(parsedUser)
     loadMachines()
-  }, [router])
+  }, [router, isAuthenticated, hasRole])
 
   useEffect(() => {
     let filtered = machines
@@ -54,7 +53,7 @@ export default function MachinesPage() {
         (machine) =>
           machine.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           machine.inventoryNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          machine.department.toLowerCase().includes(searchTerm.toLowerCase()),
+          machine.department.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -67,7 +66,7 @@ export default function MachinesPage() {
 
   const loadMachines = async () => {
     try {
-      const machinesData = await api.getMachines()
+      const machinesData = await apiClient.getMachines()
       setMachines(machinesData)
       setFilteredMachines(machinesData)
     } catch (error) {
@@ -80,16 +79,25 @@ export default function MachinesPage() {
   const handleCreateMachine = async (e) => {
     e.preventDefault()
     try {
-      await api.createMachine({
-        ...newMachine,
-        lastMaintenance: new Date().toISOString().split("T")[0],
-        nextMaintenance: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      })
+      await apiClient.createMachine(newMachine)
       setIsDialogOpen(false)
-      setNewMachine({ name: "", inventoryNumber: "", department: "", status: "Active" })
+      setNewMachine({ id: "", name: "", inventoryNumber: "", department: "", status: "Active" })
       loadMachines()
     } catch (error) {
       console.error("Error creating machine:", error)
+    }
+  }
+
+  const getStatusBadgeVariant = (status) => {
+    switch (status) {
+      case "Active":
+        return "default"
+      case "Maintenance":
+        return "secondary"
+      case "Inactive":
+        return "destructive"
+      default:
+        return "outline"
     }
   }
 
@@ -105,7 +113,7 @@ export default function MachinesPage() {
         <div className="mb-6 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Machine Management</h1>
-            <p className="text-gray-600">Manage dialysis machines and equipment</p>
+            <p className="text-gray-600">Manage dialysis machines and their status</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -119,42 +127,49 @@ export default function MachinesPage() {
                 <DialogTitle>Add New Machine</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleCreateMachine} className="space-y-4">
-                <div>
+                <div className="space-y-2">
+                  <Label htmlFor="id">Machine ID</Label>
+                  <Input
+                    id="id"
+                    value={newMachine.id}
+                    onChange={(e) => setNewMachine({ ...newMachine, id: e.target.value })}
+                    required
+                    placeholder="M001"
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="name">Machine Name</Label>
                   <Input
                     id="name"
                     value={newMachine.name}
                     onChange={(e) => setNewMachine({ ...newMachine, name: e.target.value })}
-                    placeholder="e.g., Fresenius 4008S"
                     required
+                    placeholder="Fresenius 4008S"
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="inventoryNumber">Inventory Number</Label>
                   <Input
                     id="inventoryNumber"
                     value={newMachine.inventoryNumber}
                     onChange={(e) => setNewMachine({ ...newMachine, inventoryNumber: e.target.value })}
-                    placeholder="e.g., INV-003"
                     required
+                    placeholder="INV-001"
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="department">Department</Label>
-                  <Select onValueChange={(value) => setNewMachine({ ...newMachine, department: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Dialysis Unit A">Dialysis Unit A</SelectItem>
-                      <SelectItem value="Dialysis Unit B">Dialysis Unit B</SelectItem>
-                      <SelectItem value="Dialysis Unit C">Dialysis Unit C</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="department"
+                    value={newMachine.department}
+                    onChange={(e) => setNewMachine({ ...newMachine, department: e.target.value })}
+                    required
+                    placeholder="Dialysis Unit A"
+                  />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
-                  <Select onValueChange={(value) => setNewMachine({ ...newMachine, status: value })}>
+                  <Select value={newMachine.status} onValueChange={(value) => setNewMachine({ ...newMachine, status: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
@@ -189,12 +204,12 @@ export default function MachinesPage() {
                     placeholder="Search machines..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-full sm:w-64"
+                    className="pl-10"
                   />
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-32">
-                    <SelectValue placeholder="Status" />
+                  <SelectTrigger className="w-full sm:w-40">
+                    <SelectValue placeholder="Filter by status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
@@ -207,59 +222,32 @@ export default function MachinesPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-medium">Machine</th>
-                    <th className="text-left p-3 font-medium">Inventory #</th>
-                    <th className="text-left p-3 font-medium">Department</th>
-                    <th className="text-left p-3 font-medium">Status</th>
-                    <th className="text-left p-3 font-medium">Last Maintenance</th>
-                    <th className="text-left p-3 font-medium">Next Maintenance</th>
-                    <th className="text-left p-3 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredMachines.map((machine) => (
-                    <tr key={machine.id} className="border-b hover:bg-gray-50">
-                      <td className="p-3 font-medium">{machine.name}</td>
-                      <td className="p-3">{machine.inventoryNumber}</td>
-                      <td className="p-3">{machine.department}</td>
-                      <td className="p-3">
-                        <Badge
-                          variant={
-                            machine.status === "Active"
-                              ? "default"
-                              : machine.status === "Maintenance"
-                                ? "secondary"
-                                : "destructive"
-                          }
-                        >
-                          {machine.status}
-                        </Badge>
-                      </td>
-                      <td className="p-3">{machine.lastMaintenance}</td>
-                      <td className="p-3">{machine.nextMaintenance}</td>
-                      <td className="p-3">
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline">
-                            <Settings className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredMachines.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  {searchTerm || statusFilter !== "all" ? "No machines match your filters" : "No machines found"}
+            <div className="space-y-4">
+              {filteredMachines.map((machine) => (
+                <div
+                  key={machine.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div>
+                      <h3 className="font-medium">{machine.name}</h3>
+                      <p className="text-sm text-gray-500">ID: {machine.id} | {machine.inventoryNumber}</p>
+                      <p className="text-sm text-gray-500">{machine.department}</p>
+                    </div>
+                    <Badge variant={getStatusBadgeVariant(machine.status)}>
+                      {machine.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button size="sm" variant="outline">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           </CardContent>
         </Card>

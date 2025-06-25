@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, CheckCircle } from "lucide-react"
 import { Navbar } from "@/components/layout/navbar"
-import { api } from "@/lib/api"
+import apiClient from "@/lib/api-client"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function AlertsPage() {
   const [user, setUser] = useState(null)
@@ -63,7 +64,7 @@ export default function AlertsPage() {
 
   const loadAlerts = async () => {
     try {
-      const alertsData = await api.getAlerts()
+      const alertsData = await apiClient.getAlerts()
       setAlerts(alertsData)
       setFilteredAlerts(alertsData)
     } catch (error) {
@@ -75,7 +76,7 @@ export default function AlertsPage() {
 
   const handleResolveAlert = async (alertId) => {
     try {
-      await api.updateAlertStatus(alertId, "resolved")
+      await apiClient.updateAlertStatus(alertId, "resolved")
       // Update local state
       setAlerts(alerts.map((alert) => (alert.id === alertId ? { ...alert, status: "resolved" } : alert)))
     } catch (error) {

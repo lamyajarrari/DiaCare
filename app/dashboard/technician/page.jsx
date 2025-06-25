@@ -7,39 +7,37 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AlertTriangle, Wrench, Calendar, Bell } from "lucide-react"
 import { Navbar } from "@/components/layout/navbar"
-import { api } from "@/lib/api"
+import apiClient from "@/lib/api-client"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function TechnicianDashboard() {
-  const [user, setUser] = useState(null)
   const [alerts, setAlerts] = useState([])
   const [interventions, setInterventions] = useState([])
   const [maintenance, setMaintenance] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const { user, isAuthenticated, hasRole } = useAuth()
 
   useEffect(() => {
-    const userData = localStorage.getItem("user")
-    if (!userData) {
+    if (!isAuthenticated()) {
       router.push("/login")
       return
     }
 
-    const parsedUser = JSON.parse(userData)
-    if (parsedUser.role !== "technician") {
+    if (!hasRole("technician")) {
       router.push("/login")
       return
     }
 
-    setUser(parsedUser)
     loadDashboardData()
-  }, [router])
+  }, [router, isAuthenticated, hasRole])
 
   const loadDashboardData = async () => {
     try {
       const [alertsData, interventionsData, maintenanceData] = await Promise.all([
-        api.getAlerts(),
-        api.getInterventions(),
-        api.getMaintenanceSchedule(),
+        apiClient.getAlerts(),
+        apiClient.getInterventions(),
+        apiClient.getMaintenanceSchedule(),
       ])
 
       setAlerts(alertsData)

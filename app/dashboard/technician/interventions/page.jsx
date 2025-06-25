@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Plus, FileText } from "lucide-react"
 import { Navbar } from "@/components/layout/navbar"
-import { api } from "@/lib/api"
+import apiClient from "@/lib/api-client"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function InterventionsPage() {
   const [user, setUser] = useState(null)
@@ -34,7 +35,7 @@ export default function InterventionsPage() {
 
   const loadInterventions = async () => {
     try {
-      const interventionsData = await api.getInterventions()
+      const interventionsData = await apiClient.getInterventions()
       setInterventions(interventionsData)
     } catch (error) {
       console.error("Error loading interventions:", error)
