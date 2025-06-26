@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AlertTriangle, Clock, CheckCircle, FileText } from "lucide-react"
 import { Navbar } from "@/components/layout/navbar"
-import { api } from "@/lib/api"
+import apiClient from "@/lib/api-client"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function PatientDashboard() {
   const [user, setUser] = useState(null)
@@ -34,7 +35,7 @@ export default function PatientDashboard() {
 
   const loadFaults = async (patientId) => {
     try {
-      const faultsData = await api.getFaults(patientId)
+      const faultsData = await apiClient.getFaults(patientId)
       setFaults(faultsData)
     } catch (error) {
       console.error("Error loading faults:", error)

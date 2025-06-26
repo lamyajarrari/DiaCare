@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Download, Search } from "lucide-react"
 import { Navbar } from "@/components/layout/navbar"
-import { api } from "@/lib/api"
+import apiClient from "@/lib/api-client"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function FaultHistoryPage() {
   const [user, setUser] = useState(null)
@@ -47,7 +48,7 @@ export default function FaultHistoryPage() {
 
   const loadFaults = async (patientId) => {
     try {
-      const faultsData = await api.getFaults(patientId)
+      const faultsData = await apiClient.getFaults(patientId)
       setFaults(faultsData)
       setFilteredFaults(faultsData)
     } catch (error) {

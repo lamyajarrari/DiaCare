@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Download, TrendingUp, AlertTriangle, Wrench, Clock } from "lucide-react"
 import { Navbar } from "@/components/layout/navbar"
-import { api } from "@/lib/api"
+import apiClient from "@/lib/api-client"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function ReportsPage() {
   const [user, setUser] = useState(null)
@@ -41,10 +42,10 @@ export default function ReportsPage() {
   const loadReportData = async () => {
     try {
       const [faults, interventions, maintenance, alerts] = await Promise.all([
-        api.getFaults(),
-        api.getInterventions(),
-        api.getMaintenanceSchedule(),
-        api.getAlerts(),
+        apiClient.getFaults(),
+        apiClient.getInterventions(),
+        apiClient.getMaintenanceSchedule(),
+        apiClient.getAlerts(),
       ])
 
       setReportData({ faults, interventions, maintenance, alerts })

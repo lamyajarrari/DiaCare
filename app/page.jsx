@@ -2,12 +2,12 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is already logged in
     const userData = localStorage.getItem("user")
     if (userData) {
       const user = JSON.parse(userData)
@@ -20,10 +20,17 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
-        <div className="w-16 h-16 bg-teal-500 rounded-lg flex items-center justify-center mx-auto mb-4">
-          <span className="text-white font-bold text-2xl">D+</span>
+       
+        <div className="mx-auto mb-6">
+          <Image
+            src="/logo.png"
+            alt="Logo DiaCare"
+            width={180}
+            height={180}
+            className="mx-auto"
+          />
         </div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">DiaCare</h1>
+
         <p className="text-gray-600">Loading...</p>
       </div>
     </div>

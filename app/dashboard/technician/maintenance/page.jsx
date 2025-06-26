@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, CheckCircle, Clock } from "lucide-react"
 import { Navbar } from "@/components/layout/navbar"
-import { api } from "@/lib/api"
+import apiClient from "@/lib/api-client"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function MaintenancePage() {
   const [user, setUser] = useState(null)
@@ -35,7 +36,7 @@ export default function MaintenancePage() {
 
   const loadMaintenanceData = async () => {
     try {
-      const [maintenanceData, machinesData] = await Promise.all([api.getMaintenanceSchedule(), api.getMachines()])
+      const [maintenanceData, machinesData] = await Promise.all([apiClient.getMaintenanceSchedule(), apiClient.getMachines()])
 
       setMaintenance(maintenanceData)
       setMachines(machinesData)
