@@ -1,0 +1,158 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      Role
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Role-specific IDs
+  patientId    String? @unique
+  technicianId String? @unique
+  adminId      String? @unique
+
+  // Relations
+  faults        Fault[]
+  interventions Intervention[]
+
+  @@map("users")
+}
+
+model Machine {
+  id              String    @id
+  name            String
+  inventoryNumber String    @unique
+  department      String
+  status          String
+  lastMaintenance DateTime?
+  nextMaintenance DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  faults              Fault[]
+  alerts              Alert[]
+  maintenanceSchedule MaintenanceSchedule[]
+
+  @@map("machines")
+}
+
+model Fault {
+  id               Int      @id @default(autoincrement())
+  date             String
+  faultType        String
+  description      String
+  downtime         String
+  rootCause        String
+  correctiveAction String
+  status           String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Foreign keys
+  patientId String
+  machineId String
+
+  // Relations
+  patient User    @relation(fields: [patientId], references: [patientId])
+  machine Machine @relation(fields: [machineId], references: [id])
+
+  @@map("faults")
+}
+
+model Alert {
+  id             Int      @id @default(autoincrement())
+  message        String
+  messageRole    String
+  type           String
+  requiredAction String
+  priority       Priority
+  timestamp      DateTime
+  status         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Foreign keys
+  machineId String
+
+  // Relations
+  machine Machine @relation(fields: [machineId], references: [id])
+
+  @@map("alerts")
+}
+
+model Intervention {
+  id                     Int      @id @default(autoincrement())
+  requestDate            String
+  requestedIntervention  String
+  arrivalAtWorkshop      String?
+  department             String
+  requestedBy            String
+  returnToService        String?
+  equipmentDescription   String
+  inventoryNumber        String
+  problemDescription     String
+  interventionType       String
+  datePerformed          String?
+  tasksCompleted         String?
+  partsReplaced          String?
+  partDescription        String?
+  price                  String?
+  technician             String?
+  timeSpent              String?
+  status                 String   @default("Pending")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  // Foreign keys
+  technicianId String?
+
+  // Relations
+  technicianUser User? @relation(fields: [technicianId], references: [technicianId])
+
+  @@map("interventions")
+}
+
+model MaintenanceSchedule {
+  id       Int      @id @default(autoincrement())
+  type     String
+  tasks    String // JSON array stored as string
+  dueDate  String
+  status   String   @default("Pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign keys
+  machineId String
+
+  // Relations
+  machine Machine @relation(fields: [machineId], references: [id])
+
+  @@map("maintenance_schedule")
+}
+
+enum Role {
+  patient
+  technician
+  admin
+}
+
+enum Priority {
+  low
+  medium
+  high
+  critical
+} 
